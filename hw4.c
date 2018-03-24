@@ -3,6 +3,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+int test = 0;
+int testa = 0;
+int testb = 0;
+#define TEST printf("TESTa # %d\n", test++);
+#define TESTa printf("TESTb # %d\n", testa++);
+#define TESTb printf("TESTc # %d\n", testb++);
 
 struct memory_region{
   size_t * start;
@@ -82,6 +88,7 @@ void* next_chunk(void* c) {
   if(chunk_size(c) == 0) {
     printf("Panic, chunk is of zero size.\n");
   }
+
   if((c+chunk_size(c)) < sbrk(0))
     return ((void*)c+chunk_size(c));
   else 
@@ -95,22 +102,119 @@ int in_use(void *c) {
 // index related operations
 
 #define IND_INTERVAL ((sbrk(0) - (void*)(heap_mem.start - 1)) / INDEX_SIZE)
+
 void build_heap_index() {
   // TODO
+/*
+int num = 0;
+int i = 0;
+  for(num = &heap_mem.start; num < &heap_mem.end; num++)
+  {
+    if(chunk_size(num) == 0)
+    {
+       break;
+    }
+    else
+    {
+       heapindex[i] = num;
+       i++;
+    }
+
+  }*/
 }
+
+
 
 // the actual collection code
 void sweep() {
   // TODO
-}
+
+ size_t * i = 0;
+
+ for( i = (heap_mem.start - 1); i < heap_mem.end; )
+ {
+//TEST
+//printf("%p %d %p %p\n",i,chunk_size(i),next_chunk(i), heap_mem.end);
+//	printf("%d\n", (int)i);
+//	size_t* temp = next_chunk(i);
+
+
+
+
+
+//	if(!is_pointer(i)){
+	if(is_marked(i))
+        {
+	  clear_mark(i);
+        } 
+
+        else if (in_use(i))
+        { 
+           free(i+1);
+         } 
+//}
+//TESTa    
+
+	i = next_chunk(i);
+        if (i == 0)
+        {
+          break;
+        }
+//TESTb
+ }
+
+printf("sweep\n");
+   return;
+ }
 
 //determine if what "looks" like a pointer actually points to a block in the heap
 size_t * is_pointer(size_t * ptr) {
   // TODO
+  size_t * i = 0;
+  if(ptr < heap_mem.start || ptr > heap_mem.end)
+  {
+     return (NULL);
+  }
+
+  for(i = (heap_mem.start - 1); i < heap_mem.end; i = next_chunk(i) )
+  {
+     if( i < ptr && ptr < (size_t*)next_chunk(i) && in_use(i) )
+     {
+        return i;
+     }
+  }
+
+   return (NULL);
 }
 
 void walk_region_and_mark(void* start, void* end) {
   // TODO
+
+
+size_t * begin = (size_t*)start;
+size_t * finish = (size_t*)end;
+
+size_t * i = 0;
+
+size_t * c = 0;
+
+for( i = begin; i < finish; i++)
+{
+  c = is_pointer(i);
+
+
+  if( c && !is_marked(c) )
+  {
+     mark(c);   
+     walk_region_and_mark(c+1,next_chunk(c));
+
+  } 
+
+ 
+ 
+}
+
+
 }
 
 // standard initialization 
@@ -133,9 +237,11 @@ void gc() {
   // implementing this smart function for collecting garbage can get bonus;
   // if you can't figure it out, just comment out this function.
   // walk_region_and_mark and sweep are enough for this project.
-  build_heap_index();
+  //build_heap_index();
 
   //walk memory regions
+//printf("%s\n", "this is probably where it crashes");
+
   walk_region_and_mark(global_mem.start,global_mem.end);
   walk_region_and_mark(stack_mem.start,stack_mem.end);
   sweep();
