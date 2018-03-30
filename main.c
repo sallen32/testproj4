@@ -103,8 +103,7 @@ int main(int argc, char** argv) {
 
 	/* the most basic allocation and clearing pointer exercise. This only checks for following the root set pointers one level. */
 	void *pre = sbrk(0);
-	for(int i=0;i<MAX_ALLOCATIONS;i++)
-//for(int i=0; i<5; i++) 
+	for(int i=0;i<MAX_ALLOCATIONS;i++) 
 		allocs[i]=malloc(i*2+128); 		 
 
 	printf("Heap after first round of allocations: %zu, free %d, inuse %d\n",heap_size(),free_chunks(),inuse_chunks());
