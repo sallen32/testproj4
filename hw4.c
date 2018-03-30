@@ -127,93 +127,120 @@ int i = 0;
 
 // the actual collection code
 void sweep() {
-  // TODO
+// TODO
 
- size_t * i = 0;
+size_t * i = 0;
+ //printf("start sweep\n");
+for( i = (heap_mem.start - 1); i < (size_t *)sbrk(0); )
+{
+ //printf("%p %d %p %p\n",i,chunk_size(i),next_chunk(i), heap_mem.end);
+ //      printf("%d\n", (int)i);
 
- for( i = (heap_mem.start - 1); i < heap_mem.end; )
- {
-//TEST
-//printf("%p %d %p %p\n",i,chunk_size(i),next_chunk(i), heap_mem.end);
-//	printf("%d\n", (int)i);
-//	size_t* temp = next_chunk(i);
+         size_t * temp = next_chunk(i);
 
+         if(is_marked(i))
+         {
+           clear_mark(i);
+         }
 
+         else if (in_use(i))
+         {
+            free(i+1);
+          }
 
+         if( temp == sbrk(0) )
+         {
+            break;
+         }
 
+         if( temp == 0 )
+         {
+           break;
+         }
 
-//	if(!is_pointer(i)){
-	if(is_marked(i))
-        {
-	  clear_mark(i);
-        } 
+         i = temp;
 
-        else if (in_use(i))
-        { 
-           free(i+1);
-         } 
-//}
-//TESTa    
-
-	i = next_chunk(i);
-        if (i == 0)
-        {
-          break;
-        }
-//TESTb
- }
-
-printf("sweep\n");
-   return;
+  }
  }
 
 //determine if what "looks" like a pointer actually points to a block in the heap
 size_t * is_pointer(size_t * ptr) {
-  // TODO
-  size_t * i = 0;
-  if(ptr < heap_mem.start || ptr > heap_mem.end)
-  {
-     return (NULL);
-  }
+// TODO
 
-  for(i = (heap_mem.start - 1); i < heap_mem.end; i = next_chunk(i) )
-  {
-     if( i < ptr && ptr < (size_t*)next_chunk(i) && in_use(i) )
-     {
+printf("pointy %p \n", ptr);
+printf("start %p end %p \n", heap_mem.start-1, heap_mem.end);
+//printf("sbrk is %d \n", (int)sbrk(0));
+
+size_t * i = 0;
+
+if(ptr < (heap_mem.start-1) || ptr > (size_t*)sbrk(0) )
+{
+	i = NULL;
         return i;
-     }
-  }
+}
 
-   return (NULL);
+TEST
+
+for(i = (heap_mem.start - 1); i < (size_t*)sbrk(0); i = next_chunk(i) )
+{
+ TESTa
+	if( i < ptr && ptr < (size_t*)next_chunk(i) && in_use(i) )
+	{
+ TESTb
+         //printf("what is I %p \n", i);
+            return i;
+        }
+}
+
 }
 
 void walk_region_and_mark(void* start, void* end) {
   // TODO
 
 
-size_t * begin = (size_t*)start;
-size_t * finish = (size_t*)end;
+//size_t * begin = (size_t*)start;
+//size_t * finish = (size_t*)end;
 
 size_t * i = 0;
 
 size_t * c = 0;
 
-for( i = begin; i < finish; i++)
-{
-  c = is_pointer(i);
+ for( i = (size_t*)start; i < (size_t*)end;  )
+ {
+  // size_t* temp = next_chunk(i);
+
+   c = is_pointer(i);
+
+ // size_t* temp = next_chunk(c);
+
+   printf("start %p i %p end %p c %p \n",start,i,end,c);
+
+   if (c == NULL)
+   {
+ //              printf("banana \n");
+    break;
+   }
+
+   if( c && (!is_marked(c)) )
+   {
+                 printf("grade a MEMA \n");
+      mark(c);
+      walk_region_and_mark(c+1,next_chunk(c));
+   }
 
 
-  if( c && !is_marked(c) )
-  {
-     mark(c);   
-     walk_region_and_mark(c+1,next_chunk(c));
+   if( i == end )
+   {
+         break;
+   }
 
-  } 
+   if( i == 0 || i == NULL)
+   {
+         break;
+   }
 
- 
- 
-}
-
+   i = next_chunk(c);
+ }
 
 }
 
