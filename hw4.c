@@ -153,7 +153,7 @@ for( i = (heap_mem.start - 1); i < (size_t *)sbrk(0); )
             break;
          }
 
-         if( temp == 0 )
+         if( temp == 0 || temp == NULL )
          {
            break;
          }
@@ -165,81 +165,91 @@ for( i = (heap_mem.start - 1); i < (size_t *)sbrk(0); )
 
 //determine if what "looks" like a pointer actually points to a block in the heap
 size_t * is_pointer(size_t * ptr) {
-// TODO
+  // TODO
 
-printf("pointy %p \n", ptr);
-printf("start %p end %p \n", heap_mem.start-1, heap_mem.end);
-//printf("sbrk is %d \n", (int)sbrk(0));
+//printf("pointer %p \n", ptr);
+//printf("start of heap %p end of heap %p \n", (heap_mem.start-1), heap_mem.end);
+//printf("sbrk is %d \n", (size_t *)sbrk(0));
 
-size_t * i = 0;
+  size_t * i = 0;
 
-if(ptr < (heap_mem.start-1) || ptr > (size_t*)sbrk(0) )
-{
-	i = NULL;
-        return i;
-}
+  if(ptr < (heap_mem.start-1) || ptr > (size_t*)sbrk(0) )
+  {
+        return NULL;
+  }
 
-TEST
+ if( !in_use(ptr) )
+  {
+         return NULL;
+  }
 
-for(i = (heap_mem.start - 1); i < (size_t*)sbrk(0); i = next_chunk(i) )
-{
- TESTa
-	if( i < ptr && ptr < (size_t*)next_chunk(i) && in_use(i) )
-	{
- TESTb
-         //printf("what is I %p \n", i);
-            return i;
-        }
-}
+//TEST
+
+  for(i = (heap_mem.start-1); i < (size_t*)sbrk(0); )
+  {
+        size_t * temp = next_chunk(i);
+
+     if( i < ptr && ptr < temp && in_use(i) )
+     {
+        //printf("what is I %p \n", i);
+           return ((i - chunk_size(i)));
+     }
+        i = temp;
+
+  }
 
 }
 
 void walk_region_and_mark(void* start, void* end) {
   // TODO
 
+//size_t * begin = start;
+size_t * finish = end+1;
 
-//size_t * begin = (size_t*)start;
-//size_t * finish = (size_t*)end;
-
-size_t * i = 0;
-
-size_t * c = 0;
-
- for( i = (size_t*)start; i < (size_t*)end;  )
- {
-  // size_t* temp = next_chunk(i);
-
-   c = is_pointer(i);
-
- // size_t* temp = next_chunk(c);
-
-   printf("start %p i %p end %p c %p \n",start,i,end,c);
-
-   if (c == NULL)
-   {
- //              printf("banana \n");
-    break;
-   }
-
-   if( c && (!is_marked(c)) )
-   {
-                 printf("grade a MEMA \n");
-      mark(c);
-      walk_region_and_mark(c+1,next_chunk(c));
-   }
+size_t * i = start-1;
+//size_t * c = 0;
 
 
-   if( i == end )
-   {
+
+//printf("we in this walk \n");
+while(i < finish)
+{
+//for( i = (size_t*)start; i < (size_t*)end;  )
+//{
+  size_t* temp = next_chunk(i);
+
+  size_t * c = is_pointer( i );
+
+//printf("what is i %p \n",(i) );
+//printf("what is size i %p \n", chunk_size(i));
+
+
+// size_t* temp = next_chunk(c);
+
+ // printf("start %p i %p end %p c %p \n",start,i,end,c);
+
+  if (c == NULL)
+  {
          break;
-   }
+  }
 
-   if( i == 0 || i == NULL)
-   {
-         break;
-   }
+  if( c && (!is_marked(c)) )
+  {
+     mark(c);
+     walk_region_and_mark(c+1,next_chunk(c));
+  }
 
-   i = next_chunk(c);
+  if( temp == end )
+  {
+        break;
+  }
+
+  if( temp == 0 || temp == NULL)
+  {
+        break;
+  }
+
+        i = temp;
  }
 
 }
